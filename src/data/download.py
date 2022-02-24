@@ -1,5 +1,7 @@
+from redditcleaner import clean
 from pmaw import PushshiftAPI
 import pandas as pd
+import re
 
 from utils.pathing import makepath, DATA_DIR
 from utils.misc import warn_not_empty
@@ -81,7 +83,15 @@ class RedditDownloader:
     def _prune_fields(comment):
         return {
             'author_fullname': comment['author_fullname'],
-            'body': comment['body'],
+            'body': RedditDownloader._clean_body(comment['body']),
             'subreddit_id': comment['subreddit_id'],
             'created_utc': comment['created_utc']
         }
+
+    @staticmethod
+    def _clean_body(body):
+        # Quote has a bug. Matches "gt" within a word, not just "&gt;". The
+        # simple fix employed here (not sure how robust it really is) is to
+        # ensure there isn't a word character before it.
+        cleanish = clean(body, quote=False)
+        return re.sub(r'\W\"?\\?&?gt;?', '', cleanish)

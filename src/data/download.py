@@ -3,7 +3,7 @@ from pmaw import PushshiftAPI
 import pandas as pd
 import re
 
-from utils.pathing import makepath, DATA_DIR
+from utils.pathing import makepath, RAW_DATA_DIR
 from utils.misc import warn_not_empty
 
 
@@ -12,7 +12,7 @@ class RedditDownloaderConfig:
         """
         Configs for the RedditDownloader class. Accepted kwargs are:
 
-        output_dir: (type: Path-like, default: utils.pathing.DATA_DIR)
+        output_dir: (type: Path-like, default: utils.pathing.RAW_DATA_DIR)
             Root directory in which to store all the output files.
 
         num_workers: (type: int, default: 1)
@@ -30,7 +30,7 @@ class RedditDownloaderConfig:
         :param kwargs: optional configs to overwrite defaults (see above)
         """
         # NOTE: this assumes full path to files, not just filenames.
-        self.output_dir = kwargs.pop('output_dir', str(DATA_DIR))
+        self.output_dir = kwargs.pop('output_dir', str(RAW_DATA_DIR))
         self.num_workers = kwargs.pop('num_workers', 1)
         self.subreddits = kwargs.pop('subreddits', None)
         self.after = kwargs.pop('after', None)

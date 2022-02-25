@@ -32,3 +32,7 @@ def makepath(root, *args, as_string=True):
 PROJECT_ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
 DATA_DIR = ensure_path(PROJECT_ROOT_DIR / "data")
 RESULTS_DIR = ensure_path(PROJECT_ROOT_DIR / "results")
+
+# Data-specific paths.
+RAW_DATA_DIR = ensure_path(DATA_DIR / "raw")
+PREPROC_DATA_DIR = ensure_path(DATA_DIR / "preprocessed")

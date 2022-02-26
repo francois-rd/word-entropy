@@ -36,3 +36,4 @@ RESULTS_DIR = ensure_path(PROJECT_ROOT_DIR / "results")
 # Data-specific paths.
 RAW_DATA_DIR = ensure_path(DATA_DIR / "raw")
 PREPROC_DATA_DIR = ensure_path(DATA_DIR / "preprocessed")
+USAGES_DATA_DIR = ensure_path(DATA_DIR / "usages")

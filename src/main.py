@@ -1,6 +1,10 @@
 import argparse
 
-from commands import RedditDownloaderCommand, RedditPreprocessorCommand
+from commands import (
+    RedditDownloaderCommand,
+    RedditPreprocessorCommand,
+    WordUsageFinderCommand
+)
 
 if __name__ == '__main__':
     main_parser = argparse.ArgumentParser(
@@ -12,6 +16,10 @@ if __name__ == '__main__':
         'download', help="download a portion of Reddit"))
     RedditPreprocessorCommand(subparsers.add_parser(
         'preprocess', help="preprocess the downloaded Reddit data"))
+
+    # Word usage finding and pruning commands.
+    WordUsageFinderCommand(subparsers.add_parser(
+        'find', help='find all usages of each word in the Reddit data'))
 
     args = main_parser.parse_args()
     args.func(args)

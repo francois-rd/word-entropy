@@ -1,4 +1,5 @@
 import logging
+import pickle
 
 
 def warn_not_empty(kwargs):
@@ -7,3 +8,59 @@ def warn_not_empty(kwargs):
     """
     if kwargs:
         logging.warning("Unexpected kwargs: {}".format(list(kwargs.keys())))
+
+
+class ItemBlockMapper:
+    def __init__(self):
+        """
+        Compactly maps consecutive Item IDs to (Block IDs, block index) pairs,
+        and vice versa. Useful for when a direct 1:1 map would result in OOM.
+
+        Use pattern:
+
+        # Setting up the mapping.
+        mapper = ItemBlockMapper()
+        for block in block_list:
+            mapper.new_block(block.id)
+            for item in block:
+                item_id = mapper.new_item_id()
+                # Business logic involving item_id
+                ...
+        mapper.save('my_id_map.pickle')  # Always pickles.
+
+        # Later reverse mapping.
+        mapper = ItemBlockMapper.load('my_id_map.pickle')
+        for item_id in item_id_list:
+            block_id, block_index = mapper.get_block_id(item_id)
+            item = block_list[block_id][block_index]
+            # Business logic involving item
+            ...
+        """
+        self.id = 0
+        self.id_map = {}
+        self.current_block = None
+
+    def new_block(self, block_id):
+        if self.current_block is not None:
+            self.id_map[self.id] = self.current_block
+        self.current_block = block_id
+
+    def new_item_id(self):
+        current_id = self.id
+        self.id += 1
+        return current_id
+
+    def save(self, filename):
+        with open(filename, 'wb') as file:
+            pickle.dump(self.id_map, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    @staticmethod
+    def load(filename):
+        with open(filename, 'rb') as file:
+            mapper = super()
+            mapper.id_map = pickle.load(file)
+
+    def get_block_id(self, item_id):
+        for block_id in self.id_map.keys():  # Dicts are ordered as of Py3.6.
+            if block_id <= item_id:
+                return self.id_map[block_id], item_id - block_id

@@ -51,6 +51,4 @@ class RedditPreprocessor:
             if token.is_alpha and not token.is_stop:
                 # Collapse repeating letters to a maximum of 3.
                 kept.append(re.sub(r'(.)\1\1+', r'\1\1\1', token.lower_))
-        return " ".join(kept)
-
-
+        return " ".join(kept) if kept else float('NaN')

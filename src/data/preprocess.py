@@ -1,3 +1,4 @@
+from nltk.corpus import words
 import pandas as pd
 import spacy
 import os
@@ -34,8 +35,8 @@ class RedditPreprocessor:
         :param config: see RedditPreprocessorConfig for details
         """
         self.config = config
-        exclude = ['tok2vec', 'parser', 'attribute_ruler', 'lemmatizer', 'ner']
-        self.nlp = spacy.load("en_core_web_sm", exclude=exclude)
+        self.nlp = spacy.load("en_core_web_sm")
+        self.words = set(word.lower() for word in words.words())
 
     def run(self) -> None:
         for root, _, files in os.walk(self.config.input_dir):
@@ -49,6 +50,7 @@ class RedditPreprocessor:
         kept = []
         for token in self.nlp(body):
             if token.is_alpha and not token.is_stop:
-                # Collapse repeating letters to a maximum of 3.
-                kept.append(re.sub(r'(.)\1\1+', r'\1\1\1', token.lower_))
+                if token.lemma_ not in self.words:
+                    # Collapse repeating letters to a maximum of 3.
+                    kept.append(re.sub(r'(.)\1\1+', r'\1\1\1', token.lower_))
         return " ".join(kept) if kept else float('NaN')

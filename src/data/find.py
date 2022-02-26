@@ -47,7 +47,6 @@ class WordUsageFinder:
         with open(word_usage_file, 'wb') as file:
             pickle.dump(self.word_usage, file, protocol=pickle.HIGHEST_PROTOCOL)
         self.mapper.save(makepath(self.config.output_dir, "id_map.pickle"))
-        print(self.word_usage)
 
     def _process(self, body, created):
         comment_id = self.mapper.new_item_id()

@@ -38,12 +38,9 @@ class ItemBlockMapper:
         """
         self.id = 0
         self.id_map = {}
-        self.current_block = None
 
     def new_block(self, block_id):
-        if self.current_block is not None:
-            self.id_map[self.id] = self.current_block
-        self.current_block = block_id
+        self.id_map[self.id] = block_id
 
     def new_item_id(self):
         current_id = self.id

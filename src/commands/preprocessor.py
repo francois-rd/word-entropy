@@ -1,5 +1,5 @@
 from commands.core import CommandBase
-from data.preprocessing import RedditPreprocessor, RedditPreprocessorConfig
+from data.preprocess import RedditPreprocessor, RedditPreprocessorConfig
 
 
 class RedditPreprocessorCommand(CommandBase):

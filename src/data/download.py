@@ -69,7 +69,7 @@ class RedditDownloader:
             self.config.after, self.config.before, subreddit)
         filepath = makepath(self.config.output_dir, filename)
         df = pd.DataFrame(comments)
-        df.to_csv(filepath, index=False, columns=list(df.axes[1]))
+        df.dropna().to_csv(filepath, index=False, columns=list(df.axes[1]))
 
     @staticmethod
     def _filter_deleted_removed(comment):

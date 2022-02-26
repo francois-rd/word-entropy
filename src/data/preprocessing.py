@@ -42,8 +42,8 @@ class RedditPreprocessor:
             for file in files:
                 df = pd.read_csv(makepath(root, file))
                 df['body'] = df['body'].map(self._clean)
-                filepath = makepath(self.config.output_dir, "cleaned-" + file)
-                df.to_csv(filepath, index=False, columns=list(df.axes[1]))
+                path = makepath(self.config.output_dir, "cleaned-" + file)
+                df.dropna().to_csv(path, index=False, columns=list(df.axes[1]))
 
     def _clean(self, body):
         kept = []

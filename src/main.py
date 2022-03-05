@@ -4,7 +4,8 @@ from commands import (
     RedditDownloaderCommand,
     RedditPreprocessorCommand,
     WordUsageFinderCommand,
-    BasicDetectorCommand
+    BasicDetectorCommand,
+    DistributionsCommand
 )
 
 if __name__ == '__main__':
@@ -23,6 +24,10 @@ if __name__ == '__main__':
         'find', help='find all usages of each word in the Reddit data'))
     BasicDetectorCommand(subparsers.add_parser(
         'basic-detect', help='detect new words from simple time slice cutoffs'))
+
+    # Modeling commands.
+    DistributionsCommand(subparsers.add_parser(
+        'dists', help='compute word frequency distributions for all new words'))
 
     args = main_parser.parse_args()
     args.func(args)

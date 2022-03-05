@@ -31,6 +31,7 @@ def makepath(root, *args, as_string=True):
 # High-level paths.
 PROJECT_ROOT_DIR = pathlib.Path(__file__).parent.parent.parent
 DATA_DIR = ensure_path(PROJECT_ROOT_DIR / "data")
+MODEL_DIR = ensure_path(PROJECT_ROOT_DIR / "model")
 RESULTS_DIR = ensure_path(PROJECT_ROOT_DIR / "results")
 
 # Data-specific paths.
@@ -45,3 +46,6 @@ ID_MAP_FILE = "id_map.pickle"
 SURVIVING_FILE = "surviving.pickle"
 DYING_FILE = "dying.pickle"
 
+# Model-specific paths.
+DIST_DIR = ensure_path(MODEL_DIR / "distributions")
+TIME_SERIES_DIR = ensure_path(MODEL_DIR / "time_series")

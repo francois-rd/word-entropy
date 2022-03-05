@@ -4,6 +4,7 @@ import pandas as pd
 import re
 
 from utils.pathing import makepath, RAW_DATA_DIR
+from utils.timeline import TimelineConfig
 from utils.misc import warn_not_empty
 
 
@@ -21,11 +22,9 @@ class RedditDownloaderConfig:
         subreddits: (type: list, default: None)
             A string list of subreddits to download.
 
-        after: (type: float, default: None)
-            Restrict downloads to comments after this date (Epoch format).
-
-        before: (type: float, default: None)
-            Restrict downloads to comments before this date (Epoch format).
+        timeline_config: (type: dict, default: {})
+            Timeline configurations to use. Any given parameters override the
+            defaults. See utils.timeline.TimelineConfig for details.
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """
@@ -33,8 +32,7 @@ class RedditDownloaderConfig:
         self.output_dir = kwargs.pop('output_dir', str(RAW_DATA_DIR))
         self.num_workers = kwargs.pop('num_workers', 1)
         self.subreddits = kwargs.pop('subreddits', None)
-        self.after = kwargs.pop('after', None)
-        self.before = kwargs.pop('before', None)
+        self.timeline_config = kwargs.pop('timeline_config', {})
         warn_not_empty(kwargs)
 
 
@@ -47,14 +45,15 @@ class RedditDownloader:
         :param config: see RedditDownloaderConfig for details
         """
         self.config = config
+        self.timeline_config = TimelineConfig(**self.config.timeline_config)
         self.api = PushshiftAPI(num_workers=config.num_workers, jitter='full')
 
     def run(self) -> None:
-        kwargs = {'filter_fn': self._filter_deleted_removed}
-        if self.config.after is not None:
-            kwargs['after'] = self.config.after
-        if self.config.before is not None:
-            kwargs['before'] = self.config.before
+        kwargs = {
+            'after': self.timeline_config.start,
+            'before': self.timeline_config.end,
+            'filter_fn': self._filter_deleted_removed
+        }
         if self.config.subreddits is None:
             comments = self.api.search_comments(**kwargs)
             self._save_comments([self._prune_fields(c) for c in comments])
@@ -65,8 +64,8 @@ class RedditDownloader:
                 self._save_comments(comments, comments[0]['subreddit_id'])
 
     def _save_comments(self, comments, subreddit=None):
-        filename = "after{}before{}subreddit{}.csv".format(
-            self.config.after, self.config.before, subreddit)
+        filename = "start{}end{}subreddit{}.csv".format(
+            self.timeline_config.start, self.timeline_config.end, subreddit)
         filepath = makepath(self.config.output_dir, filename)
         df = pd.DataFrame(comments)
         df.dropna().to_csv(filepath, index=False, columns=list(df.axes[1]))

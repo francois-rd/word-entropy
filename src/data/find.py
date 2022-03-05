@@ -3,6 +3,7 @@ import pickle
 import os
 
 from utils.pathing import makepath, PREPROC_DATA_DIR, USAGES_DATA_DIR
+from utils.pathing import USAGE_DICT_FILE, ID_MAP_FILE
 from utils.misc import warn_not_empty, ItemBlockMapper
 
 
@@ -17,11 +18,19 @@ class WordUsageFinderConfig:
         output_dir: (type: Path-like, default: utils.pathing.USAGES_DATA_DIR)
             Root directory in which to store all the output files.
 
+        usage_file: (type: Path-like, default: utils.pathing.USAGE_DICT_FILE)
+            Name of the usage dictionary output file.
+
+        map_file: (type: Path-like, default: utils.pathing.ID_MAP_FILE)
+            Name of the usage ID map output file.
+
         :param kwargs: optional configs to overwrite defaults (see above)
         """
         # NOTE: this assumes full path to files, not just filenames.
         self.input_dir = kwargs.pop('input_dir', str(PREPROC_DATA_DIR))
         self.output_dir = kwargs.pop('output_dir', str(USAGES_DATA_DIR))
+        self.usage_file = kwargs.pop('usage_file', USAGE_DICT_FILE)
+        self.map_file = kwargs.pop('map_file', ID_MAP_FILE)
         warn_not_empty(kwargs)
 
 
@@ -43,10 +52,10 @@ class WordUsageFinder:
                 df = pd.read_csv(makepath(root, file))
                 for b, c in zip(df['body'], df['created_utc']):
                     self._process(b, c)
-        word_usage_file = makepath(self.config.output_dir, "usage_dict.pickle")
-        with open(word_usage_file, 'wb') as file:
+        usage_file = makepath(self.config.output_dir, self.config.usage_file)
+        with open(usage_file, 'wb') as file:
             pickle.dump(self.word_usage, file, protocol=pickle.HIGHEST_PROTOCOL)
-        self.mapper.save(makepath(self.config.output_dir, "id_map.pickle"))
+        self.mapper.save(makepath(self.config.output_dir, self.config.map_file))
 
     def _process(self, body, created):
         comment_id = self.mapper.new_item_id()

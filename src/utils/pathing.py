@@ -37,3 +37,11 @@ RESULTS_DIR = ensure_path(PROJECT_ROOT_DIR / "results")
 RAW_DATA_DIR = ensure_path(DATA_DIR / "raw")
 PREPROC_DATA_DIR = ensure_path(DATA_DIR / "preprocessed")
 USAGES_DATA_DIR = ensure_path(DATA_DIR / "usages")
+NEO_DATA_DIR = ensure_path(DATA_DIR / "neologisms")
+
+# Data-specific files.
+USAGE_DICT_FILE = "usage_dict.pickle"
+ID_MAP_FILE = "id_map.pickle"
+SURVIVING_FILE = "surviving.pickle"
+DYING_FILE = "dying.pickle"
+

@@ -3,7 +3,8 @@ import argparse
 from commands import (
     RedditDownloaderCommand,
     RedditPreprocessorCommand,
-    WordUsageFinderCommand
+    WordUsageFinderCommand,
+    BasicDetectorCommand
 )
 
 if __name__ == '__main__':
@@ -17,9 +18,11 @@ if __name__ == '__main__':
     RedditPreprocessorCommand(subparsers.add_parser(
         'preprocess', help="preprocess the downloaded Reddit data"))
 
-    # Word usage finding and pruning commands.
+    # Word usage finding and new word detection commands.
     WordUsageFinderCommand(subparsers.add_parser(
         'find', help='find all usages of each word in the Reddit data'))
+    BasicDetectorCommand(subparsers.add_parser(
+        'basic-detect', help='detect new words from simple time slice cutoffs'))
 
     args = main_parser.parse_args()
     args.func(args)

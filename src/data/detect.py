@@ -17,13 +17,13 @@ class BasicDetectorConfig:
         output_dir: (type: Path-like, default: utils.pathing.NEO_DATA_DIR)
             Root directory in which to store all the output files.
 
-        usage_file: (type: Path-like, default: utils.pathing.USAGE_DICT_FILE)
+        usage_file: (type: str, default: utils.pathing.USAGE_DICT_FILE)
             Name of the usage dictionary input file.
 
-        surviving_file: (type: Path-like, default: utils.pathing.SURVIVING_FILE)
+        surviving_file: (type: str, default: utils.pathing.SURVIVING_FILE)
             Name of the detected surviving new words output file.
 
-        dying_file: (type: Path-like, default: utils.pathing.DYING_FILE)
+        dying_file: (type: str, default: utils.pathing.DYING_FILE)
             Name of the detected dying new words output file.
 
         timeline_config: (type: dict, default: {})

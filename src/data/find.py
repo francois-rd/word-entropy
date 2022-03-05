@@ -18,10 +18,10 @@ class WordUsageFinderConfig:
         output_dir: (type: Path-like, default: utils.pathing.USAGES_DATA_DIR)
             Root directory in which to store all the output files.
 
-        usage_file: (type: Path-like, default: utils.pathing.USAGE_DICT_FILE)
+        usage_file: (type: str, default: utils.pathing.USAGE_DICT_FILE)
             Name of the usage dictionary output file.
 
-        map_file: (type: Path-like, default: utils.pathing.ID_MAP_FILE)
+        map_file: (type: str, default: utils.pathing.ID_MAP_FILE)
             Name of the usage ID map output file.
 
         :param kwargs: optional configs to overwrite defaults (see above)

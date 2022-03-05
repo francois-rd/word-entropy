@@ -53,9 +53,10 @@ class ItemBlockMapper:
 
     @staticmethod
     def load(filename):
+        mapper = ItemBlockMapper()
         with open(filename, 'rb') as file:
-            mapper = super()
             mapper.id_map = pickle.load(file)
+        return mapper
 
     def get_block_id(self, item_id):
         for block_id in self.id_map.keys():  # Dicts are ordered as of Py3.6.

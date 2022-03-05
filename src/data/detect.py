@@ -71,6 +71,5 @@ class BasicDetector:
         self._save(dying, self.config.dying_file)
 
     def _save(self, words, filename):
-        print(words)
         with open(makepath(self.config.output_dir, filename), 'wb') as file:
             pickle.dump(words, file, protocol=pickle.HIGHEST_PROTOCOL)

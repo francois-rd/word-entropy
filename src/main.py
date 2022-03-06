@@ -5,7 +5,8 @@ from commands import (
     RedditPreprocessorCommand,
     WordUsageFinderCommand,
     BasicDetectorCommand,
-    DistributionsCommand
+    DistributionsCommand,
+    TimeSeriesCommand
 )
 
 if __name__ == '__main__':
@@ -28,6 +29,8 @@ if __name__ == '__main__':
     # Modeling commands.
     DistributionsCommand(subparsers.add_parser(
         'dists', help='compute word frequency distributions for all new words'))
+    TimeSeriesCommand(subparsers.add_parser(
+        'time-series', help='compute entropy time series from distributions'))
 
     args = main_parser.parse_args()
     args.func(args)

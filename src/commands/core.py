@@ -1,6 +1,8 @@
-from typing import Optional, List  # Python 3.6 backwards compatibility.
+from typing import Optional, List, Type  # Python 3.6 backwards compatibility.
 import logging
 import json
+
+from utils.config import CommandConfigBase
 
 
 class CommandBase:
@@ -34,7 +36,7 @@ class CommandBase:
         subparser.set_defaults(func=self._start_wrapper)
 
     @property
-    def config_class(self):
+    def config_class(self) -> Type[CommandConfigBase]:
         """
         The command's configuration class.
         """
@@ -49,7 +51,7 @@ class CommandBase:
         """
         return None
 
-    def start(self, config, parser_args):
+    def start(self, config: CommandConfigBase, parser_args):
         """
         Start running this command from the given configs and parser args.
 
@@ -86,4 +88,4 @@ class CommandBase:
         if parser_args.dry_run:
             logging.info("Dry run. Exiting.")
         else:
-            self.start(config, parser_args)
+            self.start(config.make_paths_absolute(), parser_args)

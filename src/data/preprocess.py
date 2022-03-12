@@ -4,27 +4,45 @@ import spacy
 import os
 import re
 
-from utils.pathing import makepath, RAW_DATA_DIR, PREPROC_DATA_DIR
-from utils.misc import warn_not_empty
+from utils.pathing import makepath, ExperimentPaths
+from utils.pathing import EXPERIMENT_DIR, RAW_DATA_DIR, PREPROC_DATA_DIR
+from utils.config import CommandConfigBase
 
 
-class RedditPreprocessorConfig:
+class RedditPreprocessorConfig(CommandConfigBase):
     def __init__(self, **kwargs):
         """
         Configs for the RedditPreprocessor class. Accepted kwargs are:
 
+        experiment_dir: (type: Path-like, default: utils.pathing.EXPERIMENT_DIR)
+            Directory (either relative to utils.pathing.EXPERIMENTS_ROOT_DIR or
+            absolute) representing the currently-running experiment.
+
         input_dir: (type: Path-like, default: utils.pathing.RAW_DATA_DIR)
-            Root directory from which to read all the downloaded Reddit data.
+            Directory (either absolute or relative to 'experiment_dir') from
+            which to read all the downloaded Reddit data.
 
         output_dir: (type: Path-like, default: utils.pathing.PREPROC_DATA_DIR)
-            Root directory in which to store all the output files.
+            Directory (either absolute or relative to 'experiment_dir') in which
+            to store all the output files.
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """
-        # NOTE: this assumes full path to files, not just filenames.
-        self.input_dir = kwargs.pop('input_dir', str(RAW_DATA_DIR))
-        self.output_dir = kwargs.pop('output_dir', str(PREPROC_DATA_DIR))
-        warn_not_empty(kwargs)
+        self.experiment_dir = kwargs.pop('experiment_dir', EXPERIMENT_DIR)
+        self.input_dir = kwargs.pop('input_dir', RAW_DATA_DIR)
+        self.output_dir = kwargs.pop('output_dir', PREPROC_DATA_DIR)
+        super().__init__(**kwargs)
+
+    def make_paths_absolute(self):
+        paths = ExperimentPaths(
+            experiment_dir=self.experiment_dir,
+            raw_data_dir=self.input_dir,
+            preproc_data_dir=self.output_dir
+        )
+        self.experiment_dir = paths.experiment_dir
+        self.input_dir = paths.raw_data_dir
+        self.output_dir = paths.preproc_data_dir
+        return self
 
 
 class RedditPreprocessor:
@@ -41,7 +59,7 @@ class RedditPreprocessor:
     def run(self) -> None:
         for root, _, files in os.walk(self.config.input_dir):
             for file in files:
-                df = pd.read_csv(makepath(root, file))
+                df = pd.read_csv(makepath(root, file)).dropna()
                 df['body'] = df['body'].map(self._clean)
                 path = makepath(self.config.output_dir, "cleaned-" + file)
                 df.dropna().to_csv(path, index=False, columns=list(df.axes[1]))

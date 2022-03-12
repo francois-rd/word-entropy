@@ -1,47 +1,82 @@
 import numpy as np
 import pickle
 
-from utils.pathing import makepath, DIST_DIR, TIME_SERIES_DIR
-from utils.pathing import SURVIVING_FILE, DYING_FILE
-from utils.misc import warn_not_empty
+from utils.pathing import (
+    makepath,
+    ExperimentPaths,
+    EXPERIMENT_DIR,
+    DIST_DIR,
+    TIME_SERIES_DIR,
+    SURVIVING_FILE,
+    DYING_FILE
+)
+from utils.config import CommandConfigBase
 
 
-class TimeSeriesConfig:
+class TimeSeriesConfig(CommandConfigBase):
     def __init__(self, **kwargs):
         """
         Configs for the TimeSeries class. Accepted kwargs are:
 
+        experiment_dir: (type: Path-like, default: utils.pathing.EXPERIMENT_DIR)
+            Directory (either relative to utils.pathing.EXPERIMENTS_ROOT_DIR or
+            absolute) representing the currently-running experiment.
+
         input_dir: (type: Path-like, default: utils.pathing.DIST_DIR)
-            Root directory from which to read the word frequency distributions.
+            Directory (either absolute or relative to 'experiment_dir') from
+            which to read the word frequency distributions.
 
         surviving_input_file: (type: str, default: utils.pathing.SURVIVING_FILE)
-            Name of the surviving new word distributions output file.
+            Path (relative to 'input_dir') of the surviving new word
+            distributions file.
 
         dying_input_path: (type: str, default: utils.pathing.DYING_FILE)
-            Name of the dying new word distributions output file.
+            Path (relative to 'input_dir') of the dying new word distributions
+            file.
 
         output_dir: (type: Path-like, default: utils.pathing.TIME_SERIES_DIR)
-            Root directory in which to store all the output files.
+            Directory (either absolute or relative to 'experiment_dir') in which
+            to store all the output files.
 
         surviving_output_file: (type: str, default:
                 utils.pathing.SURVIVING_FILE)
-            Name of the surviving new word entropy time series output file.
+            Path (relative to 'output_dir') of the surviving new word entropy
+            time series output file.
 
         dying_output_file: (type: str, default: utils.pathing.DYING_FILE)
-            Name of the surviving new word entropy time series output file.
+            Path (relative to 'output_dir') of the surviving new word entropy
+            time series output file.
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """
-        # NOTE: this assumes full path to files, not just filenames.
-        self.input_dir = kwargs.pop('input_dir', str(DIST_DIR))
+        self.experiment_dir = kwargs.pop('experiment_dir', EXPERIMENT_DIR)
+        self.input_dir = kwargs.pop('input_dir', DIST_DIR)
         self.surviving_input_file = kwargs.pop(
             'surviving_input_file', SURVIVING_FILE)
         self.dying_input_file = kwargs.pop('dying_input_file', DYING_FILE)
-        self.output_dir = kwargs.pop('output_dir', str(TIME_SERIES_DIR))
+        self.output_dir = kwargs.pop('output_dir', TIME_SERIES_DIR)
         self.surviving_output_file = kwargs.pop(
             'surviving_output_file', SURVIVING_FILE)
         self.dying_output_file = kwargs.pop('dying_output_file', DYING_FILE)
-        warn_not_empty(kwargs)
+        super().__init__(**kwargs)
+
+    def make_paths_absolute(self):
+        paths = ExperimentPaths(
+            experiment_dir=self.experiment_dir,
+            dist_dir=self.input_dir,
+            time_series_dir=self.output_dir
+        )
+        self.experiment_dir = paths.experiment_dir
+        self.input_dir = paths.dist_dir
+        self.surviving_input_file = makepath(
+            self.input_dir, self.surviving_input_file)
+        self.dying_input_file = makepath(self.input_dir, self.dying_input_file)
+        self.output_dir = paths.time_series_dir
+        self.surviving_output_file = makepath(
+            self.output_dir, self.surviving_output_file)
+        self.dying_output_file = makepath(
+            self.output_dir, self.dying_output_file)
+        return self
 
 
 class TimeSeries:
@@ -61,10 +96,11 @@ class TimeSeries:
         self._do_run(config.dying_input_file, config.dying_output_file)
 
     def _do_run(self, input_file, output_file):
-        with open(makepath(self.config.input_dir, input_file), 'rb') as file:
+        with open(input_file, 'rb') as file:
             dists = pickle.load(file)
         time_series = {word: self._process(dists[word]) for word in dists}
-        with open(makepath(self.config.output_dir, output_file), 'wb') as file:
+        print(time_series)
+        with open(output_file, 'wb') as file:
             pickle.dump(time_series, file, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod

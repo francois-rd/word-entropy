@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 
-from utils.misc import warn_not_empty
+from utils.config import warn_not_empty
 
 
 class TimelineConfig:

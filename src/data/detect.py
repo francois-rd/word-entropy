@@ -1,30 +1,46 @@
 import pickle
 
-from utils.pathing import makepath, USAGES_DATA_DIR, NEO_DATA_DIR
-from utils.pathing import USAGE_DICT_FILE, SURVIVING_FILE, DYING_FILE
-from utils.misc import warn_not_empty
+from utils.pathing import (
+    makepath,
+    ExperimentPaths,
+    EXPERIMENT_DIR,
+    USAGES_DATA_DIR,
+    NEO_DATA_DIR,
+    USAGE_DICT_FILE,
+    SURVIVING_FILE,
+    DYING_FILE
+)
 from utils.timeline import TimelineConfig, Timeline
+from utils.config import CommandConfigBase
 
 
-class BasicDetectorConfig:
+class BasicDetectorConfig(CommandConfigBase):
     def __init__(self, **kwargs):
         """
         Configs for the BasicDetector class. Accepted kwargs are:
 
-        input_dir: (type: Path-like, default: utils.pathing.USAGES_DATA_DIR)
-            Root directory from which to read all the word usage data.
+        experiment_dir: (type: Path-like, default: utils.pathing.EXPERIMENT_DIR)
+            Directory (either relative to utils.pathing.EXPERIMENTS_ROOT_DIR or
+            absolute) representing the currently-running experiment.
 
-        output_dir: (type: Path-like, default: utils.pathing.NEO_DATA_DIR)
-            Root directory in which to store all the output files.
+        input_dir: (type: Path-like, default: utils.pathing.USAGES_DATA_DIR)
+            Directory (either absolute or relative to 'experiment_dir') from
+            which to read all the word usage data.
 
         usage_file: (type: str, default: utils.pathing.USAGE_DICT_FILE)
-            Name of the usage dictionary input file.
+            Path (relative to 'input_dir') of the usage dictionary input file.
+
+        output_dir: (type: Path-like, default: utils.pathing.NEO_DATA_DIR)
+            Directory (either absolute or relative to 'experiment_dir') in which
+            to store all the output files.
 
         surviving_file: (type: str, default: utils.pathing.SURVIVING_FILE)
-            Name of the detected surviving new words output file.
+            Path (relative to 'output_dir') of the detected surviving new words
+            output file.
 
         dying_file: (type: str, default: utils.pathing.DYING_FILE)
-            Name of the detected dying new words output file.
+            Path (relative to 'output_dir') of the detected dying new words
+            output file.
 
         timeline_config: (type: dict, default: {})
             Timeline configurations to use. Any given parameters override the
@@ -32,14 +48,28 @@ class BasicDetectorConfig:
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """
-        # NOTE: this assumes full path to files, not just filenames.
-        self.input_dir = kwargs.pop('input_dir', str(USAGES_DATA_DIR))
-        self.output_dir = kwargs.pop('output_dir', str(NEO_DATA_DIR))
+        self.experiment_dir = kwargs.pop('experiment_dir', EXPERIMENT_DIR)
+        self.input_dir = kwargs.pop('input_dir', USAGES_DATA_DIR)
+        self.output_dir = kwargs.pop('output_dir', NEO_DATA_DIR)
         self.usage_file = kwargs.pop('usage_file', USAGE_DICT_FILE)
         self.surviving_file = kwargs.pop('surviving_file', SURVIVING_FILE)
         self.dying_file = kwargs.pop('dying_file', DYING_FILE)
         self.timeline_config = kwargs.pop('timeline_config', {})
-        warn_not_empty(kwargs)
+        super().__init__(**kwargs)
+
+    def make_paths_absolute(self):
+        paths = ExperimentPaths(
+            experiment_dir=self.experiment_dir,
+            usages_data_dir=self.input_dir,
+            neo_data_dir=self.output_dir
+        )
+        self.experiment_dir = paths.experiment_dir
+        self.input_dir = paths.usages_data_dir
+        self.output_dir = paths.neo_data_dir
+        self.usage_file = makepath(self.input_dir, self.usage_file)
+        self.surviving_file = makepath(self.output_dir, self.surviving_file)
+        self.dying_file = makepath(self.output_dir, self.dying_file)
+        return self
 
 
 class BasicDetector:
@@ -56,8 +86,7 @@ class BasicDetector:
         self.timeline = Timeline(TimelineConfig(**self.config.timeline_config))
 
     def run(self) -> None:
-        usage_file = makepath(self.config.input_dir, self.config.usage_file)
-        with open(usage_file, 'rb') as file:
+        with open(self.config.usage_file, 'rb') as file:
             usage_dict = pickle.load(file)
         neologisms = dict((word, usage) for word, usage in usage_dict.items()
                           if not self.timeline.is_early(usage[0]))
@@ -70,6 +99,7 @@ class BasicDetector:
         self._save(surviving, self.config.surviving_file)
         self._save(dying, self.config.dying_file)
 
-    def _save(self, words, filename):
-        with open(makepath(self.config.output_dir, filename), 'wb') as file:
+    @staticmethod
+    def _save(words, filename):
+        with open(filename, 'wb') as file:
             pickle.dump(words, file, protocol=pickle.HIGHEST_PROTOCOL)

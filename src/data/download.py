@@ -3,23 +3,33 @@ from pmaw import PushshiftAPI
 import pandas as pd
 import re
 
-from utils.pathing import makepath, RAW_DATA_DIR
+from utils.pathing import EXPERIMENT_DIR, CACHE_DIR, RAW_DATA_DIR
+from utils.pathing import makepath, ExperimentPaths
+from utils.config import CommandConfigBase
 from utils.timeline import TimelineConfig
-from utils.misc import warn_not_empty
 
 
-class RedditDownloaderConfig:
+class RedditDownloaderConfig(CommandConfigBase):
     def __init__(self, **kwargs):
         """
         Configs for the RedditDownloader class. Accepted kwargs are:
 
+        experiment_dir: (type: Path-like, default: utils.pathing.EXPERIMENT_DIR)
+            Directory (either relative to utils.pathing.EXPERIMENTS_ROOT_DIR or
+            absolute) representing the currently-running experiment.
+
+        cache_dir: (type: Path-like, default: utils.pathing.CACHE_DIR)
+            Directory (either absolute or relative to 'experiment_dir') in which
+            to store all the temporarily-cached download files.
+
         output_dir: (type: Path-like, default: utils.pathing.RAW_DATA_DIR)
-            Root directory in which to store all the output files.
+            Directory (either absolute or relative to 'experiment_dir') in which
+            to store all the output files.
 
         num_workers: (type: int, default: 1)
             The number of current threads to use for download.
 
-        subreddits: (type: list, default: None)
+        subreddits: (type: list, default: ["news"])
             A string list of subreddits to download.
 
         timeline_config: (type: dict, default: {})
@@ -28,12 +38,24 @@ class RedditDownloaderConfig:
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """
-        # NOTE: this assumes full path to files, not just filenames.
-        self.output_dir = kwargs.pop('output_dir', str(RAW_DATA_DIR))
+        self.experiment_dir = kwargs.pop('experiment_dir', EXPERIMENT_DIR)
+        self.cache_dir = kwargs.pop('cache_dir', CACHE_DIR)
+        self.output_dir = kwargs.pop('output_dir', RAW_DATA_DIR)
         self.num_workers = kwargs.pop('num_workers', 1)
-        self.subreddits = kwargs.pop('subreddits', None)
+        self.subreddits = kwargs.pop('subreddits', ["news"])
         self.timeline_config = kwargs.pop('timeline_config', {})
-        warn_not_empty(kwargs)
+        super().__init__(**kwargs)
+
+    def make_paths_absolute(self):
+        paths = ExperimentPaths(
+            experiment_dir=self.experiment_dir,
+            cache_dir=self.cache_dir,
+            raw_data_dir=self.output_dir
+        )
+        self.experiment_dir = paths.experiment_dir
+        self.cache_dir = paths.cache_dir
+        self.output_dir = paths.raw_data_dir
+        return self
 
 
 class RedditDownloader:
@@ -49,23 +71,25 @@ class RedditDownloader:
         self.api = PushshiftAPI(num_workers=config.num_workers, jitter='full')
 
     def run(self) -> None:
-        kwargs = {
-            'after': self.timeline_config.start,
-            'before': self.timeline_config.end,
-            'filter_fn': self._filter_deleted_removed
-        }
-        if self.config.subreddits is None:
-            comments = self.api.search_comments(**kwargs)
-            self._save_comments([self._prune_fields(c) for c in comments])
-        else:
-            for sub in self.config.subreddits:
-                comments = self.api.search_comments(subreddit=sub, **kwargs)
-                comments = [self._prune_fields(c) for c in comments]
-                self._save_comments(comments, comments[0]['subreddit_id'])
+        for sub in self.config.subreddits:
+            comments = self.api.search_comments(
+                subreddit=sub,
+                after=self.timeline_config.start,
+                before=self.timeline_config.end,
+                mem_safe=True,
+                safe_exit=True,
+                filter_fn=self._filter_deleted_removed,
+                cache_dir=makepath(self.config.cache_dir, sub)
+            )
+            comments = list(comments)
+            subreddit_id = comments[0]['subreddit_id']
+            comments = [self._prune_fields(c) for c in comments]
+            self._save_comments(comments, sub, subreddit_id)
 
-    def _save_comments(self, comments, subreddit=None):
-        filename = "start{}end{}subreddit{}.csv".format(
-            self.timeline_config.start, self.timeline_config.end, subreddit)
+    def _save_comments(self, comments, subreddit, subreddit_id):
+        filename = "start={}-end={}-subreddit={}-subreddit_id={}.csv".format(
+            self.timeline_config.start, self.timeline_config.end,
+            subreddit, subreddit_id)
         filepath = makepath(self.config.output_dir, filename)
         df = pd.DataFrame(comments)
         df.dropna().to_csv(filepath, index=False, columns=list(df.axes[1]))
@@ -83,7 +107,6 @@ class RedditDownloader:
         return {
             'author_fullname': comment['author_fullname'],
             'body': RedditDownloader._clean_body(comment['body']),
-            'subreddit_id': comment['subreddit_id'],
             'created_utc': comment['created_utc']
         }
 

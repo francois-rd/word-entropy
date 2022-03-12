@@ -1,13 +1,14 @@
-import logging
 import pickle
+import os
 
 
-def warn_not_empty(kwargs):
-    """
-    Logs a warning if the given kwargs is not empty.
-    """
-    if kwargs:
-        logging.warning("Unexpected kwargs: {}".format(list(kwargs.keys())))
+def parts_from_filename(file):
+    parts = os.path.splitext(file)[0].split("-")
+    if parts[0] == 'cleaned':
+        parts[0] = "cleaned=True"
+    else:
+        parts.insert(0, "cleaned=False")
+    return dict(part.split("=") for part in parts)
 
 
 class ItemBlockMapper:
@@ -59,6 +60,6 @@ class ItemBlockMapper:
         return mapper
 
     def get_block_id(self, item_id):
-        for block_id in self.id_map.keys():  # Dicts are ordered as of Py3.6.
+        for block_id in reversed(self.id_map.keys()):  # Dicts ordered in Py>3.6
             if block_id <= item_id:
                 return self.id_map[block_id], item_id - block_id

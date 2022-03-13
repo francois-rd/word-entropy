@@ -1,6 +1,7 @@
 from redditcleaner import clean
 from pmaw import PushshiftAPI
 import pandas as pd
+import logging
 import re
 
 from utils.pathing import EXPERIMENT_DIR, CACHE_DIR, RAW_DATA_DIR
@@ -68,23 +69,38 @@ class RedditDownloader:
         """
         self.config = config
         self.timeline_config = TimelineConfig(**self.config.timeline_config)
-        self.api = PushshiftAPI(num_workers=config.num_workers, jitter='full')
+        logging.getLogger().setLevel(logging.INFO)
 
     def run(self) -> None:
-        for sub in self.config.subreddits:
-            comments = self.api.search_comments(
-                subreddit=sub,
-                after=self.timeline_config.start,
-                before=self.timeline_config.end,
-                mem_safe=True,
-                safe_exit=True,
-                filter_fn=self._filter_deleted_removed,
-                cache_dir=makepath(self.config.cache_dir, sub)
-            )
-            comments = list(comments)
+        for subreddit in self.config.subreddits:
+            comments = self._download_comments(subreddit)
             subreddit_id = comments[0]['subreddit_id']
             comments = [self._prune_fields(c) for c in comments]
-            self._save_comments(comments, sub, subreddit_id)
+            self._save_comments(comments, subreddit, subreddit_id)
+
+    def _download_comments(self, subreddit):
+        count = 0
+        while True:
+            try:
+                comments = PushshiftAPI(
+                    num_workers=self.config.num_workers,
+                    jitter='full'
+                ).search_comments(
+                    subreddit=subreddit,
+                    after=self.timeline_config.start,
+                    before=self.timeline_config.end,
+                    mem_safe=True,
+                    safe_exit=True,
+                    filter_fn=self._filter_deleted_removed,
+                    cache_dir=makepath(self.config.cache_dir, subreddit)
+                )
+            except Exception as e:
+                count += 1
+                logging.warning(f"Download failed. Count={count}. "
+                                f"Exception type={type(e)}")
+            else:
+                break
+        return list(comments)
 
     def _save_comments(self, comments, subreddit, subreddit_id):
         filename = "start={}-end={}-subreddit={}-subreddit_id={}.csv".format(
@@ -92,7 +108,8 @@ class RedditDownloader:
             subreddit, subreddit_id)
         filepath = makepath(self.config.output_dir, filename)
         df = pd.DataFrame(comments)
-        df.dropna().to_csv(filepath, index=False, columns=list(df.axes[1]))
+        df = df[df['body'].str.strip().astype(bool)]  # Remove empty strings.
+        df.to_csv(filepath, index=False, columns=list(df.axes[1]))
 
     @staticmethod
     def _filter_deleted_removed(comment):

@@ -98,6 +98,3 @@ class ExperimentPaths:
         if pathlib.Path(path).is_absolute():
             return str(ensure_path(path))
         return ensure_path(makepath(root, path))
-
-
-

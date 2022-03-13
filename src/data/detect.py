@@ -42,6 +42,10 @@ class BasicDetectorConfig(CommandConfigBase):
             Path (relative to 'output_dir') of the detected dying new words
             output file.
 
+        min_usage_cutoff: (type: int, default: 1)
+            The minimum number of occurrences of a word to be considered valid.
+            Words occurring less often are considered noise.
+
         timeline_config: (type: dict, default: {})
             Timeline configurations to use. Any given parameters override the
             defaults. See utils.timeline.TimelineConfig for details.
@@ -54,6 +58,7 @@ class BasicDetectorConfig(CommandConfigBase):
         self.usage_file = kwargs.pop('usage_file', USAGE_DICT_FILE)
         self.surviving_file = kwargs.pop('surviving_file', SURVIVING_FILE)
         self.dying_file = kwargs.pop('dying_file', DYING_FILE)
+        self.min_usage_cutoff = kwargs.pop('min_usage_cutoff', 1)
         self.timeline_config = kwargs.pop('timeline_config', {})
         super().__init__(**kwargs)
 
@@ -75,8 +80,8 @@ class BasicDetectorConfig(CommandConfigBase):
 class BasicDetector:
     def __init__(self, config: BasicDetectorConfig):
         """
-        Detects novel words based on an earliness cutoff and separates dying
-        and surviving words based on a lateness cutoff, based on a Timeline.
+        Detects novel words based on earliness and usage cutoffs and separates
+        dying and surviving words based on a lateness cutoff.
 
         Non-novel words are filtered out from the set of all word usages.
 
@@ -89,7 +94,8 @@ class BasicDetector:
         with open(self.config.usage_file, 'rb') as file:
             usage_dict = pickle.load(file)
         neologisms = dict((word, usage) for word, usage in usage_dict.items()
-                          if not self.timeline.is_early(usage[0]))
+                          if not self.timeline.is_early(usage[0])
+                          and len(usage[2]) >= self.config.min_usage_cutoff)
         surviving, dying = {}, {}
         for word, usage in neologisms.items():
             if self.timeline.is_late(usage[1]):

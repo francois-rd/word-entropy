@@ -99,7 +99,6 @@ class TimeSeries:
         with open(input_file, 'rb') as file:
             dists = pickle.load(file)
         time_series = {word: self._process(dists[word]) for word in dists}
-        print(time_series)
         with open(output_file, 'wb') as file:
             pickle.dump(time_series, file, protocol=pickle.HIGHEST_PROTOCOL)
 

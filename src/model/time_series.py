@@ -44,8 +44,8 @@ class TimeSeriesConfig(CommandConfigBase):
             time series output file.
 
         dying_output_file: (type: str, default: utils.pathing.DYING_FILE)
-            Path (relative to 'output_dir') of the surviving new word entropy
-            time series output file.
+            Path (relative to 'output_dir') of the dying new word entropy time
+            series output file.
 
         :param kwargs: optional configs to overwrite defaults (see above)
         """

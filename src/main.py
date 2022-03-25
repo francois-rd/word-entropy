@@ -4,6 +4,7 @@ from commands import (
     ExistingWordSamplerCommand,
     RedditDownloaderCommand,
     RedditPreprocessorCommand,
+    RedditCounterCommand,
     WordUsageFinderCommand,
     BasicDetectorCommand,
     DistributionsCommand,
@@ -24,6 +25,8 @@ if __name__ == '__main__':
         'preprocess', help="preprocess the downloaded Reddit data"))
 
     # Word usage finding and new word detection commands.
+    RedditCounterCommand(subparsers.add_parser(
+        'count', help="count words by user and by subreddit"))
     WordUsageFinderCommand(subparsers.add_parser(
         'find', help='find all usages of each word in the Reddit data'))
     BasicDetectorCommand(subparsers.add_parser(

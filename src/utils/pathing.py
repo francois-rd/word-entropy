@@ -44,6 +44,7 @@ CACHE_DIR = makepath(DATA_DIR, "cache")
 RAW_DATA_DIR = makepath(DATA_DIR, "raw")
 PREPROC_DATA_DIR = makepath(DATA_DIR, "preprocessed")
 CAP_DATA_DIR = makepath(DATA_DIR, "cap_freq")
+COUNT_DATA_DIR = makepath(DATA_DIR, "count")
 USAGES_DATA_DIR = makepath(DATA_DIR, "usages")
 NEO_DATA_DIR = makepath(DATA_DIR, "neologisms")
 
@@ -52,6 +53,7 @@ DIST_DIR = makepath(MODEL_DIR, "distributions")
 TIME_SERIES_DIR = makepath(MODEL_DIR, "time_series")
 
 # Recurring files.
+COUNT_FILE = "count.pickle"
 USAGE_DICT_FILE = "usage_dict.pickle"
 ID_MAP_FILE = "id_map.pickle"
 SURVIVING_FILE = "surviving.pickle"
@@ -71,6 +73,7 @@ class ExperimentPaths:
             raw_data_dir=RAW_DATA_DIR,
             preproc_data_dir=PREPROC_DATA_DIR,
             cap_data_dir=CAP_DATA_DIR,
+            count_data_dir=COUNT_DATA_DIR,
             usages_data_dir=USAGES_DATA_DIR,
             neo_data_dir=NEO_DATA_DIR,
             dist_dir=DIST_DIR,
@@ -95,6 +98,7 @@ class ExperimentPaths:
         self.raw_data_dir = self._process(raw_data_dir)
         self.preproc_data_dir = self._process(preproc_data_dir)
         self.cap_data_dir = self._process(cap_data_dir)
+        self.count_data_dir = self._process(count_data_dir)
         self.usages_data_dir = self._process(usages_data_dir)
         self.neo_data_dir = self._process(neo_data_dir)
         self.dist_dir = self._process(dist_dir)

@@ -79,5 +79,5 @@ class RedditCounter:
                     self.users[a] += count
                     self.subreddits[subreddit_id] += count
         with open(self.config.count_file, 'wb') as f:
-            obj = {'subreddits': self.subreddits, 'users': self.users}
+            obj = {'subreddit': self.subreddits, 'user': self.users}
             pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)

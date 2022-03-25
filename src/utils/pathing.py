@@ -39,9 +39,11 @@ MODEL_DIR = "model"
 RESULTS_DIR = "results"
 
 # Data-specific paths.
+EXIST_DATA_DIR = makepath(DATA_DIR, "existing")
 CACHE_DIR = makepath(DATA_DIR, "cache")
 RAW_DATA_DIR = makepath(DATA_DIR, "raw")
 PREPROC_DATA_DIR = makepath(DATA_DIR, "preprocessed")
+CAP_DATA_DIR = makepath(DATA_DIR, "cap_freq")
 USAGES_DATA_DIR = makepath(DATA_DIR, "usages")
 NEO_DATA_DIR = makepath(DATA_DIR, "neologisms")
 
@@ -54,6 +56,7 @@ USAGE_DICT_FILE = "usage_dict.pickle"
 ID_MAP_FILE = "id_map.pickle"
 SURVIVING_FILE = "surviving.pickle"
 DYING_FILE = "dying.pickle"
+EXISTING_FILE = "existing.pickle"
 
 
 class ExperimentPaths:
@@ -63,9 +66,11 @@ class ExperimentPaths:
             data_dir=DATA_DIR,
             model_dir=MODEL_DIR,
             results_dir=RESULTS_DIR,
+            exist_data_dir=EXIST_DATA_DIR,
             cache_dir=CACHE_DIR,
             raw_data_dir=RAW_DATA_DIR,
             preproc_data_dir=PREPROC_DATA_DIR,
+            cap_data_dir=CAP_DATA_DIR,
             usages_data_dir=USAGES_DATA_DIR,
             neo_data_dir=NEO_DATA_DIR,
             dist_dir=DIST_DIR,
@@ -85,9 +90,11 @@ class ExperimentPaths:
         self.data_dir = self._process(data_dir)
         self.model_dir = self._process(model_dir)
         self.results_dir = self._process(results_dir)
+        self.exist_data_dir = self._process(exist_data_dir)
         self.cache_dir = self._process(cache_dir)
         self.raw_data_dir = self._process(raw_data_dir)
         self.preproc_data_dir = self._process(preproc_data_dir)
+        self.cap_data_dir = self._process(cap_data_dir)
         self.usages_data_dir = self._process(usages_data_dir)
         self.neo_data_dir = self._process(neo_data_dir)
         self.dist_dir = self._process(dist_dir)

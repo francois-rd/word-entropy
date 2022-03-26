@@ -169,9 +169,9 @@ class Distributions:
         for row_id, word_list in row_map.items():
             row = df.iloc[[row_id]]
             author_fullname = row['author_fullname'].item()
+            time_slice = self.timeline.slice_of(row['created_utc'].item())
             for word in word_list:
                 all_slices = dists.setdefault(word, {})
-                time_slice = self.timeline.slice_of(row['created_utc'].item())
                 all_dists = all_slices.setdefault(time_slice, {})
                 user = all_dists.setdefault('user', {})
                 user[author_fullname] = user.get(author_fullname, 0) + 1

@@ -52,6 +52,9 @@ NEO_DATA_DIR = makepath(DATA_DIR, "neologisms")
 DIST_DIR = makepath(MODEL_DIR, "distributions")
 TIME_SERIES_DIR = makepath(MODEL_DIR, "time_series")
 
+# Results-specific paths.
+PLOT_TS_DIR = makepath(RESULTS_DIR, "plot_ts")
+
 # Recurring files.
 COUNT_FILE = "count.pickle"
 USAGE_DICT_FILE = "usage_dict.pickle"
@@ -77,7 +80,8 @@ class ExperimentPaths:
             usages_data_dir=USAGES_DATA_DIR,
             neo_data_dir=NEO_DATA_DIR,
             dist_dir=DIST_DIR,
-            time_series_dir=TIME_SERIES_DIR
+            time_series_dir=TIME_SERIES_DIR,
+            plot_ts_dir=PLOT_TS_DIR
     ):
         """
         Utilities for paths relating to the current experiment.
@@ -103,6 +107,7 @@ class ExperimentPaths:
         self.neo_data_dir = self._process(neo_data_dir)
         self.dist_dir = self._process(dist_dir)
         self.time_series_dir = self._process(time_series_dir)
+        self.plot_ts_dir = self._process(plot_ts_dir)
 
     def _process(self, path, root=None):
         root = root or self.experiment_dir

@@ -8,7 +8,8 @@ from commands import (
     WordUsageFinderCommand,
     BasicDetectorCommand,
     DistributionsCommand,
-    TimeSeriesCommand
+    TimeSeriesCommand,
+    PlotTimeSeriesCommand
 )
 
 if __name__ == '__main__':
@@ -38,5 +39,8 @@ if __name__ == '__main__':
     TimeSeriesCommand(subparsers.add_parser(
         'time-series', help='compute entropy time series from distributions'))
 
+    # Analysis commands.
+    PlotTimeSeriesCommand(subparsers.add_parser(
+        'plot-ts', help='plot the multiple resulting time series'))
     args = main_parser.parse_args()
     args.func(args)

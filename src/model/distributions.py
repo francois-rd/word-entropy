@@ -169,7 +169,10 @@ class Distributions:
         for row_id, word_list in row_map.items():
             row = df.iloc[[row_id]]
             author_fullname = row['author_fullname'].item()
-            time_slice = self.timeline.slice_of(row['created_utc'].item())
+            timestamp = row['created_utc'].item()
+            if self.timeline.is_early(timestamp):  # Prunes existing, if needed.
+                continue
+            time_slice = self.timeline.slice_of(timestamp)
             for word in word_list:
                 all_slices = dists.setdefault(word, {})
                 all_dists = all_slices.setdefault(time_slice, {})

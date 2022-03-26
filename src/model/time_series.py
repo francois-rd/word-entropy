@@ -125,7 +125,7 @@ class TimeSeries:
         slice_indices = [int(index) for index in time_slices.keys()]
         offset = min(slice_indices)
         all_slices = [0.0] * (max(slice_indices) - offset + 1)
-        all_time_series = {'user': all_slices, 'subreddit': all_slices}
+        all_time_series = {'user': all_slices, 'subreddit': all_slices.copy()}
         for index, all_dists in time_slices.items():
             for dist_name, dist in all_dists.items():
                 freqs = np.array(list(dist.values()))

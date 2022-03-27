@@ -7,3 +7,4 @@ from .detector import BasicDetectorCommand
 from .distributions import DistributionsCommand
 from .time_series import TimeSeriesCommand
 from .plot_ts import PlotTimeSeriesCommand
+from .stats import PlotStatsCommand

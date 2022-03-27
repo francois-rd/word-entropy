@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 import pickle
 import os
 
@@ -74,6 +75,9 @@ class RedditCounter:
                 self.subreddits.setdefault(subreddit_id, 0)
                 df = pd.read_csv(makepath(root, file))
                 for a, b in zip(df['author_fullname'], df['body']):
+                    if isinstance(b, float):
+                        logging.warning(f"Body is float. Ignoring.")
+                        continue
                     count = len(b.split())
                     self.users.setdefault(a, 0)
                     self.users[a] += count

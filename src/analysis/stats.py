@@ -101,10 +101,9 @@ class PlotStats:
     def run(self) -> None:
         logging.getLogger().setLevel(logging.INFO)
         surv = self._do_run("Surviving", self.config.surviving_file)
-        #dying = self._do_run("Dying", self.config.dying_file)
+        dying = self._do_run("Dying", self.config.dying_file)
         existing = self._do_run("Existing", self.config.existing_file)
-        #args = [surv, dying, existing]
-        args = [surv, existing]
+        args = [surv, dying, existing]
         self._table(*args)
         styles = ['seaborn-colorblind', 'seaborn-deep', 'dark_background']
         for style in styles:

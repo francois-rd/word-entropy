@@ -103,10 +103,9 @@ class PlotTimeSeries:
             self.style = style   # Can't get this programmatically from context.
             with plt.style.context(style):
                 surv = self._do_run("Surviving", self.config.surviving_file)
-                #dying = self._do_run("Dying", self.config.dying_file)
+                dying = self._do_run("Dying", self.config.dying_file)
                 existing = self._do_run("Existing", self.config.existing_file)
-                #self._plot(surv, dying, existing)
-                self._plot(surv, existing)
+                self._plot(surv, dying, existing)
 
     def _do_run(self, word_type, input_path):
         with open(input_path, 'rb') as file:

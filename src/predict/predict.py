@@ -103,8 +103,7 @@ class Prediction:
 
     def run(self) -> None:
         surviving = self._extract(0, self.config.surviving_file)
-        #dying = self._extract(1, self.config.dying_file)
-        dying = self._extract(1, self.config.surviving_file)  # TODO: Fix.
+        dying = self._extract(1, self.config.dying_file)
         existing = self._extract(2, self.config.existing_file)
         self._do_run(surviving, dying)
         self._do_run(surviving, dying, existing=existing)

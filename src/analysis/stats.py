@@ -52,6 +52,13 @@ class PlotStatsConfig(CommandConfigBase):
             Directory (either absolute or relative to 'experiment_dir') in which
             to store all the output files.
 
+        drop_last: (type: bool, default: True)
+            Whether to drop the last time slice or not.
+
+        major_x_ticks: (type: int, default: 0)
+            If positive, the value to set for the major xticks in matplotlib.
+            Otherwise, leave xticks to the default layout.
+
         timeline_config: (type: dict, default: {})
             Timeline configurations to use. Any given parameters override the
             defaults. See utils.timeline.TimelineConfig for details.
@@ -64,6 +71,8 @@ class PlotStatsConfig(CommandConfigBase):
         self.dying_file = kwargs.pop('dying_file', DYING_FILE)
         self.existing_file = kwargs.pop('existing_file', EXISTING_FILE)
         self.output_dir = kwargs.pop('output_dir', STATS_DIR)
+        self.drop_last = kwargs.pop('drop_last', True)
+        self.major_x_ticks = kwargs.pop('major_x_ticks', 0)
         self.timeline_config = kwargs.pop('timeline_config', {})
         super().__init__(**kwargs)
 
@@ -94,6 +103,8 @@ class PlotStats:
         tl_config = TimelineConfig(**self.config.timeline_config)
         self.max_time_slice = Timeline(tl_config).slice_of(tl_config.end)
         self.max_time_slice -= tl_config.early
+        if config.drop_last:
+            self.max_time_slice -= 1
         self.slice_size = tl_config.slice_size
         self.style = None
         self.all_time_series_names = None
@@ -116,15 +127,22 @@ class PlotStats:
     def _do_run(self, word_type, input_path):
         with open(input_path, 'rb') as file:
             all_time_series_by_word = pickle.load(file)
+        self._maybe_drop_last(all_time_series_by_word)
         rhos = self._spearman(all_time_series_by_word)
         with_word_type = word_type, self._stats(rhos)
         return with_word_type
 
+    def _maybe_drop_last(self, all_time_series_by_word):
+        if self.config.drop_last:
+            for time_series_for_word in all_time_series_by_word.values():
+                for time_series in time_series_for_word.values():
+                    if len(time_series) > self.max_time_slice:
+                        del time_series[-1]
+
     def _spearman(self, all_time_series_by_word):
         rhos, swapped = {}, self._swap_keys(all_time_series_by_word)
         if self.all_time_series_names is None:
-            all_time_series_names = list([k.title() for k in swapped])
-            self.all_time_series_names = all_time_series_names
+            self.all_time_series_names = list([ts.title() for ts in swapped])
         for time_series_name, time_series_list in swapped.items():
             rhos[time_series_name] = []
             for time_series in time_series_list:
@@ -167,9 +185,13 @@ class PlotStats:
         return swapped
 
     def _finalize_plot(self, *, ylabel, title, filename, legend=True):
-        plt.xticks(np.arange(self.max_time_slice + 1))
-        plt.gca().xaxis.set_major_locator(MultipleLocator(5))
-        plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+        plt.xticks(np.arange(1, self.max_time_slice + 1))
+        if self.config.major_x_ticks > 0:
+            ax = plt.gca().xaxis
+            ax.set_major_locator(MultipleLocator(self.config.major_x_ticks))
+            ax.set_minor_locator(MultipleLocator(1))
+        plt.yticks(np.arange(-1, 1.001, 0.5))
+        plt.ylim(-1, 1)
         plt.xlabel(f"Time Index ({self.slice_size}s since first appearance)")
         plt.ylabel(ylabel)
         plt.title(title)
@@ -181,7 +203,6 @@ class PlotStats:
 
     def _plot(self, *args):
         for ts_type in self.all_time_series_names:
-            title = f"{ts_type} Time Series"
             filename = f"{'-'.join(wt for wt, _ in args)}-{ts_type.lower()}.pdf"
             plt.figure()
             for word_type, stat_ts in args:
@@ -192,13 +213,13 @@ class PlotStats:
                                  color=color, alpha=0.2)
                 poly1d_fn = np.poly1d(np.polyfit(x, means, 1))
                 plt.plot(x, poly1d_fn(x), color=color, linestyle='dashed')
-            self._finalize_plot(ylabel="Spearman's Rho", title=title,
+            self._finalize_plot(ylabel="Spearman's Rho", title=f"{ts_type}",
                                 filename=filename, legend=len(args) > 1)
 
     def _table(self, *args):
         n_combs = len(list(itertools.combinations(range(len(args)), 2)))
         n_tests = (len(args) + n_combs) * len(self.all_time_series_names)
-        n_tests *= self.max_time_slice - 1
+        n_tests *= self.max_time_slice
         data, all_index = [], []
         args_dict = {k[0]: v for k, v in args}
         for ts_type in self.all_time_series_names:
@@ -213,13 +234,12 @@ class PlotStats:
             all_index.extend([(ts_type, i) for i in index])
         filename = f"{'-'.join(wt for wt, _ in args)}.txt"
         cols = [(f"Time Index ({self.slice_size}s since first appearance)",
-                str(i)) for i in range(1, self.max_time_slice)]
+                str(i)) for i in range(1, self.max_time_slice + 1)]
         all_index = pd.MultiIndex.from_tuples(all_index)
         cols = pd.MultiIndex.from_tuples(cols)
         self._save(pd.DataFrame(data, index=all_index, columns=cols), filename)
 
-    @staticmethod
-    def _ttest(stats_ts, n_tests, data, second_stats_ts=None):
+    def _ttest(self, stats_ts, n_tests, data, second_stats_ts=None):
         row_data = []
         if second_stats_ts is None:
             reps = len(stats_ts[0])
@@ -236,6 +256,7 @@ class PlotStats:
             else:
                 star = ""
             row_data.append(f"{m1 - m2:.2f}{star}")
+        row_data.extend(["-"] * (self.max_time_slice - len(row_data)))
         data.append(row_data)
 
     def _save(self, df, filename):
@@ -249,7 +270,7 @@ class PlotStats:
             lambda v: "textbf:--rwrap;"
         ).to_latex(
             buf=makepath(self.config.output_dir, filename),
-            column_format="cc|" + "d{2.5}" * (self.max_time_slice - 1),
+            column_format="cc|" + "d{2.5}" * self.max_time_slice,
             position="h",
             position_float="centering",
             hrules=True,

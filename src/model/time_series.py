@@ -131,5 +131,6 @@ class TimeSeries:
                 freqs = np.array(list(dist.values()))
                 total = np.sum(freqs)
                 entropy = np.log2(total) - freqs.dot(np.log2(freqs)) / total
-                all_time_series[dist_name][int(index) - offset] = entropy
+                norm_entropy = entropy / np.log2(freqs.shape[0])
+                all_time_series[dist_name][int(index) - offset] = norm_entropy
         return all_time_series

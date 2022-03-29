@@ -173,6 +173,8 @@ class Prediction:
             lambda v: "textbf:--rwrap;", axis=1
         ).applymap_index(
             lambda v: "textbf:--rwrap;"
+        ).apply(
+            lambda s: ["textbf:--rwrap;" if c else '' for c in s == s.max()]
         ).to_latex(
             buf=makepath(self.config.output_dir, filename),
             column_format="l|" + "c" * len(cols),

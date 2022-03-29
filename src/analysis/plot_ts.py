@@ -51,6 +51,17 @@ class PlotTimeSeriesConfig(CommandConfigBase):
         num_anecdotes: (type: int, default: 5)
             Number of anecdotal words to randomly sample for plotting.
 
+        drop_last: (type: bool, default: True)
+            Whether to drop the last time slice or not.
+
+        major_x_ticks: (type: int, default: 0)
+            If positive, the value to set for the major xticks in matplotlib.
+            Otherwise, leave xticks to the default layout.
+
+        legend_y_anchor: (type: dict[str, float], default: {})
+            For the mean plots, y-value of the legend bounding box anchor for
+            each type of time series. If missing, value set to 0.0 by default.
+
         timeline_config: (type: dict, default: {})
             Timeline configurations to use. Any given parameters override the
             defaults. See utils.timeline.TimelineConfig for details.
@@ -64,6 +75,9 @@ class PlotTimeSeriesConfig(CommandConfigBase):
         self.existing_file = kwargs.pop('existing_file', EXISTING_FILE)
         self.output_dir = kwargs.pop('output_dir', PLOT_TS_DIR)
         self.num_anecdotes = kwargs.pop('num_anecdotes', 5)
+        self.drop_last = kwargs.pop('drop_last', True)
+        self.major_x_ticks = kwargs.pop('major_x_ticks', 0)
+        self.legend_y_anchor = kwargs.pop('legend_y_anchor', {})
         self.timeline_config = kwargs.pop('timeline_config', {})
         super().__init__(**kwargs)
 
@@ -94,6 +108,8 @@ class PlotTimeSeries:
         tl_config = TimelineConfig(**self.config.timeline_config)
         self.max_time_slice = Timeline(tl_config).slice_of(tl_config.end)
         self.max_time_slice -= tl_config.early
+        if config.drop_last:
+            self.max_time_slice -= 1
         self.slice_size = tl_config.slice_size
         self.style = None
 
@@ -110,10 +126,18 @@ class PlotTimeSeries:
     def _do_run(self, word_type, input_path):
         with open(input_path, 'rb') as file:
             all_time_series_by_word = pickle.load(file)
+        self._maybe_drop_last(all_time_series_by_word)
         self._plot_anecdotes(word_type, all_time_series_by_word)
         with_word_type = word_type, self._swap_keys(all_time_series_by_word)
         self._plot(with_word_type)
         return with_word_type
+
+    def _maybe_drop_last(self, all_time_series_by_word):
+        if self.config.drop_last:
+            for time_series_for_word in all_time_series_by_word.values():
+                for time_series in time_series_for_word.values():
+                    if len(time_series) > self.max_time_slice:
+                        del time_series[-1]
 
     def _plot_anecdotes(self, word_type, all_time_series_by_word):
         anecdotes = {k: all_time_series_by_word[k] for k in random.sample(
@@ -127,7 +151,6 @@ class PlotTimeSeries:
                 ts = time_series[ts_type.lower()]
                 plt.plot(np.arange(len(ts)), ts, label=word)
             self._finalize_plot(
-                ylabel="Entropy",
                 title=f"{ts_type} Entropy Time Series for Randomly-Selected "
                       f"{word_type} Words",
                 filename=filename + "all.pdf"
@@ -139,7 +162,6 @@ class PlotTimeSeries:
                 ts = time_series[ts_type.lower()]
                 plt.plot(np.arange(len(ts)), ts)
                 self._finalize_plot(
-                    ylabel="Entropy",
                     title=f"{ts_type} Entropy Time Series for '{word}' "
                           f"({word_type})",
                     filename=filename + f"{word}.pdf",
@@ -154,23 +176,24 @@ class PlotTimeSeries:
                 swapped.setdefault(time_series_name, []).append(time_series)
         return swapped
 
-    def _finalize_plot(self, *, ylabel, title, filename, legend=True):
+    def _finalize_plot(self, *, title, filename, legend=True, leg_params=None):
         plt.xticks(np.arange(self.max_time_slice + 1))
-        plt.gca().xaxis.set_major_locator(MultipleLocator(5))
-        plt.gca().xaxis.set_minor_locator(MultipleLocator(1))
+        if self.config.major_x_ticks > 0:
+            ax = plt.gca().xaxis
+            ax.set_major_locator(MultipleLocator(self.config.major_x_ticks))
+            ax.set_minor_locator(MultipleLocator(1))
         plt.xlabel(f"Time Index ({self.slice_size}s since first appearance)")
-        plt.ylabel(ylabel)
+        plt.ylabel("Normalized Entropy")
         plt.title(title)
         if legend:
-            plt.legend()
+            leg_params = leg_params or {}
+            plt.legend(**leg_params)
         sub_dir = ensure_path(makepath(self.config.output_dir, self.style))
         plt.savefig(makepath(sub_dir, filename))
         plt.close()
 
     def _plot(self, *args):
         for ts_type in ['User', 'Subreddit']:
-            title = f"{ts_type} Time Series"
-            filename = f"{'-'.join(wt for wt, _ in args)}-{ts_type.lower()}.pdf"
             plt.figure()
             for word_type, swapped_ts in args:
                 # Variable length input, so can't vectorize easily.
@@ -196,5 +219,11 @@ class PlotTimeSeries:
                                  color=color, alpha=0.2)
                 poly1d_fn = np.poly1d(np.polyfit(x, means, 1))
                 plt.plot(x, poly1d_fn(x), color=color, linestyle='dashed')
-            self._finalize_plot(ylabel="Entropy", title=title,
-                                filename=filename, legend=len(args) > 1)
+            filename = f"{'-'.join(wt for wt, _ in args)}-{ts_type.lower()}.pdf"
+            y0 = self.config.legend_y_anchor.get(ts_type.lower(), 0.0)
+            self._finalize_plot(
+                title=f"{ts_type}",
+                filename=filename,
+                legend=len(args) > 1,
+                leg_params={'loc': 'center right', 'bbox_to_anchor': (1.0, y0)}
+            )

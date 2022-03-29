@@ -129,8 +129,11 @@ class TimeSeries:
         for index, all_dists in time_slices.items():
             for dist_name, dist in all_dists.items():
                 freqs = np.array(list(dist.values()))
-                total = np.sum(freqs)
-                entropy = np.log2(total) - freqs.dot(np.log2(freqs)) / total
-                norm_entropy = entropy / np.log2(freqs.shape[0])
+                if freqs.shape[0] == 1:
+                    norm_entropy = 0.0
+                else:
+                    total = np.sum(freqs)
+                    entropy = np.log2(total) - freqs.dot(np.log2(freqs)) / total
+                    norm_entropy = entropy / np.log2(freqs.shape[0])
                 all_time_series[dist_name][int(index) - offset] = norm_entropy
         return all_time_series

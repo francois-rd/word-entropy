@@ -10,7 +10,8 @@ from commands import (
     DistributionsCommand,
     TimeSeriesCommand,
     PlotTimeSeriesCommand,
-    PlotStatsCommand
+    PlotStatsCommand,
+    PredictionCommand
 )
 
 if __name__ == '__main__':
@@ -45,5 +46,7 @@ if __name__ == '__main__':
         'plot-ts', help='plot the multiple resulting time series'))
     PlotStatsCommand(subparsers.add_parser(
         'plot-stats', help='compute and plot stats from the time series'))
+    PredictionCommand(subparsers.add_parser(
+        'predict', help='predict word type from the resulting time series'))
     args = main_parser.parse_args()
     args.func(args)

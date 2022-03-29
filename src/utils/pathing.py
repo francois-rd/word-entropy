@@ -55,6 +55,7 @@ TIME_SERIES_DIR = makepath(MODEL_DIR, "time_series")
 # Results-specific paths.
 PLOT_TS_DIR = makepath(RESULTS_DIR, "plot_ts")
 STATS_DIR = makepath(RESULTS_DIR, "stats")
+PREDICT_DIR = makepath(RESULTS_DIR, "predict")
 
 # Recurring files.
 COUNT_FILE = "count.pickle"
@@ -83,7 +84,8 @@ class ExperimentPaths:
             dist_dir=DIST_DIR,
             time_series_dir=TIME_SERIES_DIR,
             plot_ts_dir=PLOT_TS_DIR,
-            stats_dir=STATS_DIR
+            stats_dir=STATS_DIR,
+            predict_dir=PREDICT_DIR
     ):
         """
         Utilities for paths relating to the current experiment.
@@ -111,6 +113,7 @@ class ExperimentPaths:
         self.time_series_dir = self._process(time_series_dir)
         self.plot_ts_dir = self._process(plot_ts_dir)
         self.stats_dir = self._process(stats_dir)
+        self.predict_dir = self._process(predict_dir)
 
     def _process(self, path, root=None):
         root = root or self.experiment_dir

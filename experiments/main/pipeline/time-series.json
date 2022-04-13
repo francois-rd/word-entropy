@@ -1,0 +1,11 @@
+{
+    "experiment_dir": "main",
+    "input_dir": "model/distributions",
+    "surviving_input_file": "surviving.pickle",
+    "dying_input_file": "dying.pickle",
+    "existing_input_file": "existing.pickle",
+    "output_dir": "model/time_series",
+    "surviving_output_file": "surviving.pickle",
+    "dying_output_file": "dying.pickle",
+    "existing_output_file": "existing.pickle"
+}

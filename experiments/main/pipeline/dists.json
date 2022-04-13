@@ -1,0 +1,23 @@
+{
+    "experiment_dir": "main",
+    "preproc_dir": "data/preprocessed",
+    "neo_dir": "data/neologisms",
+    "surviving_neo_file": "surviving.pickle",
+    "dying_neo_file": "dying.pickle",
+    "existing_neo_file": "existing.pickle",
+    "count_dir": "data/count",
+    "count_file": "count.pickle",
+    "usages_dir": "data/usages",
+    "map_file": "id_map.pickle",
+    "output_dir": "model/distributions",
+    "surviving_output_file": "surviving.pickle",
+    "dying_output_file": "dying.pickle",
+    "existing_output_file": "existing.pickle",
+    "timeline_config": {
+        "start": 1577854800,
+        "end": 1609477200,
+        "early": 2,
+        "late": 2,
+        "slice_size": "month"
+    }
+}

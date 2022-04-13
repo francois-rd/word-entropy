@@ -4,6 +4,10 @@
     "surviving_file": "surviving.pickle",
     "dying_file": "dying.pickle",
     "existing_file": "existing.pickle",
+    "neo_dir": "data/neologisms",
+    "surviving_neo_file": "surviving.pickle",
+    "dying_neo_file": "dying.pickle",
+    "existing_neo_file": "existing.pickle",
     "output_dir": "results/plot_ts",
     "num_anecdotes": 5,
     "drop_last": true,
@@ -13,6 +17,7 @@
         "subreddit": 0.37
     },
     "plot_std": true,
+    "quantile": 0.25,
     "timeline_config": {
         "start": 1577854800,
         "end": 1609477200,

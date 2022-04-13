@@ -62,6 +62,9 @@ class PlotTimeSeriesConfig(CommandConfigBase):
             For the mean plots, y-value of the legend bounding box anchor for
             each type of time series. If missing, value set to 0.0 by default.
 
+        plot_std: (type: bool, default: True)
+            Whether to plot the standard deviations in the mean plots or not.
+
         timeline_config: (type: dict, default: {})
             Timeline configurations to use. Any given parameters override the
             defaults. See utils.timeline.TimelineConfig for details.
@@ -78,6 +81,7 @@ class PlotTimeSeriesConfig(CommandConfigBase):
         self.drop_last = kwargs.pop('drop_last', True)
         self.major_x_ticks = kwargs.pop('major_x_ticks', 0)
         self.legend_y_anchor = kwargs.pop('legend_y_anchor', {})
+        self.plot_std = kwargs.pop('plot_std', True)
         self.timeline_config = kwargs.pop('timeline_config', {})
         super().__init__(**kwargs)
 
@@ -188,6 +192,7 @@ class PlotTimeSeries:
         if legend:
             leg_params = leg_params or {}
             plt.legend(**leg_params)
+        plt.tight_layout()
         sub_dir = ensure_path(makepath(self.config.output_dir, self.style))
         plt.savefig(makepath(sub_dir, filename))
         plt.close()
@@ -215,8 +220,12 @@ class PlotTimeSeries:
                 # Plot means, stds, and linear regression line.
                 x = np.arange(len(means))
                 color = plt.plot(x, means, label=word_type)[0].get_color()
-                plt.fill_between(x, means - stds, means + stds,
-                                 color=color, alpha=0.2)
+                if self.config.plot_std:
+                    plt.fill_between(x, means - stds, means + stds,
+                                     color=color, alpha=0.2)
+                else:
+                    y = [max(means + stds), min(means - stds)]
+                    plt.scatter([1, 2], y, color='k', alpha=0)
                 poly1d_fn = np.poly1d(np.polyfit(x, means, 1))
                 plt.plot(x, poly1d_fn(x), color=color, linestyle='dashed')
             filename = f"{'-'.join(wt for wt, _ in args)}-{ts_type.lower()}.pdf"
